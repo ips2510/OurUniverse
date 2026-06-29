@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Universe ✿</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #050210;
+    overflow: hidden;
+    font-family: 'Georgia', serif;
+    cursor: none;
+    user-select: none;
+  }
+
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* ── CUSTOM CURSOR ── */
+  #cursor {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    color: #ffb3cc;
+    text-shadow: 0 0 12px #ff80aa, 0 0 24px #ff4488;
+    transition: transform 0.1s ease;
+  }
+
+  /* ── UI OVERLAY ── */
+  #ui {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Progress dots */
+  #progress {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,180,210,0.35);
+    transition: all 0.6s ease;
+  }
+
+  .dot.active {
+    background: #f9a8c9;
+    box-shadow: 0 0 14px #f9a8c9, 0 0 28px #ff4488;
+    transform: scale(1.3);
+  }
+
+  /* Chapter text */
+  #chapter {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    width: 90%;
+    max-width: 600px;
+  }
+
+  #chapter h2 {
+    font-size: clamp(1.3rem, 3.5vw, 2.4rem);
+    font-style: italic;
+    color: #ffd4e8;
+    text-shadow:
+      0 0 20px #ff80aa,
+      0 0 50px #c04070,
+      0 0 100px #80004060;
+    letter-spacing: 0.18em;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  #chapter p {
+    font-size: clamp(0.8rem, 1.8vw, 1.05rem);
+    color: #e8d0f8;
+    opacity: 0.88;
+    line-height: 1.8;
+    text-shadow: 0 0 18px #8040a0;
+    letter-spacing: 0.04em;
+  }
+
+  /* Navigation */
+  #nav {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    pointer-events: all;
+  }
+
+  #nav button {
+    background: rgba(20, 5, 30, 0.6);
+    border: 1px solid rgba(255, 160, 200, 0.45);
+    color: #f0c0d8;
+    padding: 9px 22px;
+    border-radius: 22px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    backdrop-filter: blur(8px);
+    transition: all 0.35s ease;
+  }
+
+  #nav button:hover {
+    background: rgba(180, 60, 110, 0.28);
+    border-color: rgba(255, 160, 200, 0.9);
+    box-shadow: 0 0 20px rgba(255, 80, 140, 0.3);
+    color: #fff0f8;
+  }
+
+  /* Hint */
+  #hint {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 200, 225, 0.55);
+    font-size: 0.78rem;
+    letter-spacing: 0.25em;
+    font-style: italic;
+    animation: gentlePulse 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes gentlePulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.75; }
+  }
+
+  /* ── LOVE LETTER OVERLAY ── */
+  #letter-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    background: rgba(3, 1, 10, 0.82);
+    backdrop-filter: blur(12px);
+    animation: overlayIn 0.8s ease;
+  }
+
+  #letter-overlay.visible {
+    display: flex;
+  }
+
+  @keyframes overlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #letter-card {
+    max-width: 520px;
+    width: 90%;
+    padding: 50px 45px;
+    text-align: center;
+    position: relative;
+    animation: letterRise 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    border: 1px solid rgba(255, 180, 210, 0.2);
+    border-radius: 4px;
+    background: rgba(12, 4, 22, 0.7);
+  }
+
+  @keyframes letterRise {
+    from { opacity: 0; transform: translateY(35px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  #letter-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(255,180,210,0.2), transparent 50%, rgba(180,120,255,0.15));
+    pointer-events: none;
+  }
+
+  #letter-card .letter-icon {
+    font-size: 2rem;
+    margin-bottom: 18px;
+    display: block;
+    animation: iconFloat 3s ease-in-out infinite;
+  }
+
+  @keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  #letter-card h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    color: #ffd4e8;
+    font-style: italic;
+    letter-spacing: 0.12em;
+    margin-bottom: 28px;
+    text-shadow: 0 0 30px #ff80aa, 0 0 60px #c04070;
+  }
+
+  #letter-card p {
+    font-size: clamp(0.82rem, 1.6vw, 0.95rem);
+    color: #e0c8f8;
+    line-height: 2;
+    margin-bottom: 14px;
+    opacity: 0.9;
+    font-style: italic;
+  }
+
+  #letter-card .signature {
+    font-size: 1.25rem;
+    color: #ffb3cc;
+    font-style: italic;
+    text-shadow: 0 0 16px #ff80aa;
+    margin-top: 24px;
+    display: block;
+  }
+
+  #letter-card .continued {
+    font-size: 0.75rem;
+    color: #c080e0;
+    letter-spacing: 0.4em;
+    margin-top: 22px;
+    opacity: 0.65;
+    display: block;
+    text-transform: uppercase;
+  }
+
+  #close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: 1px solid rgba(255, 170, 200, 0.3);
+    color: #f0b0cc;
+    padding: 5px 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    font-style: italic;
+    transition: all 0.3s;
+    font-family: 'Georgia', serif;
+  }
+
+  #close-btn:hover {
+    border-color: rgba(255, 170, 200, 0.8);
+    color: #fff0f6;
+    background: rgba(180, 50, 100, 0.2);
+  }
+
+  /* ── LOADING SCREEN ── */
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: #050210;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    transition: opacity 1.2s ease;
+  }
+
+  #loading .load-flower {
+    font-size: 2.8rem;
+    animation: spin 4s linear infinite;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  #loading p {
+    color: rgba(255, 190, 215, 0.7);
+    font-style: italic;
+    letter-spacing: 0.3em;
+    font-size: 0.9rem;
+    animation: gentlePulse 1.8s ease-in-out infinite;
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 600px) {
+    #nav button { padding: 7px 14px; font-size: 0.75rem; }
+    #chapter { bottom: 80px; }
+    #letter-card { padding: 35px 25px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <span class="load-flower">✿</span>
+  <p>building your universe&hellip; (it's a lot)</p>
+</div>
+
+<!-- Main canvas -->
+<canvas id="canvas"></canvas>
+
+<!-- Cursor -->
+<div id="cursor">✿</div>
+
+<!-- UI -->
+<div id="ui">
+  <div id="progress"></div>
+  <div id="chapter">
+    <h2 id="ch-title"></h2>
+    <p id="ch-text"></p>
+  </div>
+  <div id="nav">
+    <button id="prevBtn">← Before</button>
+    <button id="nextBtn">Onward →</button>
+  </div>
+  <div id="hint">scroll or click around · your cursor does something</div>
+</div>
+
+<!-- Love Letter -->
+<div id="letter-overlay">
+  <div id="letter-card">
+    <button id="close-btn">close ✕</button>
+    <span class="letter-icon">✉</span>
+    <h1>A Very Serious Letter</h1>
+    <p>Hi. It's me. I made you a whole universe.<br>With floating islands and butterflies and everything.<br>You're welcome. No, I'm not normal about you.</p>
+    <p>You are, objectively, my favourite person.<br>Even when you're annoying.<br><em>Especially</em> a little bit when you're annoying.</p>
+    <p>I would absolutely pick you again.<br>In every timeline. Every universe.<br>Even the ones where we're probably raccoons.</p>
+    <p>Thank you for existing<br>and for tolerating me<br>and for laughing at the right moments.</p>
+    <span class="signature">Yours, obviously ✿</span>
+    <span class="continued">— to be continued (obviously) —</span>
+  </div>
+</div>
+
+<!-- Three.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+"use strict";
+
+// ─────────────────────────────────────────────
+//  CHAPTER DATA
+// ─────────────────────────────────────────────
+const CHAPTERS = [
+  {
+    title: "How We Met (Allegedly)",
+    text: "You were just standing there. Being a person. And somehow that was enough for me to lose my entire mind.",
+    fogColor: 0x0d0320,
+    clearColor: 0x080118,
+    lightColor: 0xff80aa
+  },
+  {
+    title: "Our Greatest Hits",
+    text: "Getting lost, blaming each other, then laughing about it for three years. Peak romance actually.",
+    fogColor: 0x1a0b30,
+    clearColor: 0x10071e,
+    lightColor: 0xffd080
+  },
+  {
+    title: "The Bit No One Else Gets",
+    text: "We said it again. It was funny. It will always be funny. Everyone else is just wrong.",
+    fogColor: 0x0d1040,
+    clearColor: 0x080a28,
+    lightColor: 0xa78bfa
+  },
+  {
+    title: "Why I'm Keeping You",
+    text: "You laugh at my jokes even when they're bad. Honestly that alone seals the deal.",
+    fogColor: 0x200818,
+    clearColor: 0x140510,
+    lightColor: 0xff70a0
+  },
+  {
+    title: "The Plan (Loosely)",
+    text: "Go places. Eat good food. Argue about directions. Be absolutely ridiculous together forever.",
+    fogColor: 0x1a100a,
+    clearColor: 0x100806,
+    lightColor: 0xffcc80
+  },
+  {
+    title: "Still Here. Still You. Still Yes.",
+    text: "I looked at the entire universe and picked you. Do you know how dramatic that is? Very. Very dramatic.",
+    fogColor: 0x050215,
+    clearColor: 0x03010d,
+    lightColor: 0xd0a0ff
+  }
+];
+
+// Camera waypoints per chapter
+const WAYPOINTS = [
+  { px:  0,  py:  5, pz: 22,  lx:  0,  ly:  0, lz:  0 },
+  { px:-16,  py:  9, pz:  2,  lx:-14,  ly:  3, lz:-18 },
+  { px: 18,  py: 13, pz:-10,  lx: 16,  ly:  2, lz:-28 },
+  { px:  0,  py:  7, pz:-22,  lx:  0,  ly:  1, lz:-38 },
+  { px:-24,  py: 11, pz:-42,  lx: 24,  ly: -2, lz:-58 },
+  { px:  0,  py: 11, pz:-68,  lx:  0,  ly:  5, lz:-85 }
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let scene, camera, renderer, clock;
+let currentChapter = 0;
+let camTarget = new THREE.Vector3(0, 5, 22);
+let lookTarget = new THREE.Vector3(0, 0, 0);
+let mouseNDC = new THREE.Vector2();
+let mouseWorld = new THREE.Vector3();
+let globalTime = 0;
+let letterShown = false;
+let hintHidden = false;
+
+// Object pools
+let lanterns = [], butterflies = [], fireflies = [], bloomFlowers = [];
+let bloomParticles = [], shootingStars = [], heartStars = [];
+let glowTree, glowLight;
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+function init() {
+  const canvas = document.getElementById('canvas');
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0d0320, 0.016);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.1, 600);
+  camera.position.set(0, 5, 22);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x080118, 1);
+  renderer.shadowMap.enabled = true;
+
+  clock = new THREE.Clock();
+
+  // Build world
+  buildLights();
+  buildStarfield();
+  buildNebula();
+  buildIslands();
+  buildWaterfall();
+  buildClouds();
+  buildLanterns();
+  buildButterflies();
+  buildFireflies();
+  buildGlowingTree();
+  buildProgressDots();
+
+  // Events
+  setupEvents();
+
+  // Start on chapter 0
+  applyChapter(0, true);
+
+  // Hide loading
+  setTimeout(() => {
+    const loading = document.getElementById('loading');
+    loading.style.opacity = '0';
+    setTimeout(() => loading.style.display = 'none', 1200);
+  }, 1600);
+
+  // Schedule shooting stars
+  scheduleShootingStars();
+
+  animate();
+}
+
+// ─────────────────────────────────────────────
+//  LIGHTS
+// ─────────────────────────────────────────────
+let ambientLight, fillLight, rimLight;
+
+function buildLights() {
+  ambientLight = new THREE.AmbientLight(0x2a1045, 0.9);
+  scene.add(ambientLight);
+
+  fillLight = new THREE.DirectionalLight(0xff80aa, 0.7);
+  fillLight.position.set(12, 22, 10);
+  scene.add(fillLight);
+
+  rimLight = new THREE.PointLight(0xa060ff, 0.8, 80);
+  rimLight.position.set(-20, 18, -30);
+  scene.add(rimLight);
+
+  const warm = new THREE.PointLight(0xffd080, 0.6, 60);
+  warm.position.set(20, 14, -20);
+  scene.add(warm);
+}
+
+// ─────────────────────────────────────────────
+//  STARFIELD
+// ─────────────────────────────────────────────
+function buildStarfield() {
+  const N = 4000;
+  const positions = new Float32Array(N * 3);
+  const colors    = new Float32Array(N * 3);
+  const sizes     = new Float32Array(N);
+
+  const palette = [
+    [1.0, 0.70, 0.82],
+    [0.85, 0.70, 1.00],
+    [1.0, 0.92, 0.65],
+    [0.72, 0.86, 1.00],
+    [1.0, 1.00, 1.00],
+  ];
+
+  for (let i = 0; i < N; i++) {
+    positions[i*3]   = (Math.random() - 0.5) * 500;
+    positions[i*3+1] = (Math.random() - 0.5) * 180 + 40;
+    positions[i*3+2] = (Math.random() - 0.5) * 500 - 60;
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    colors[i*3] = c[0]; colors[i*3+1] = c[1]; colors[i*3+2] = c[2];
+    sizes[i] = 0.2 + Math.random() * 0.5;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
+
+  const mat = new THREE.PointsMaterial({
+    size: 0.4,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.92,
+    sizeAttenuation: true,
+  });
+
+  scene.add(new THREE.Points(geo, mat));
+}
+
+// ─────────────────────────────────────────────
+//  NEBULA CLOUDS (large blobs behind scene)
+// ─────────────────────────────────────────────
+function buildNebula() {
+  const blobs = [
+    { x: -60, y: 30, z: -120, r: 25, col: 0x3d0d60, o: 0.08 },
+    { x:  50, y: 25, z: -100, r: 20, col: 0x6d1a30, o: 0.07 },
+    { x:   0, y: 35, z: -160, r: 30, col: 0x1a1050, o: 0.09 },
+  ];
+  blobs.forEach(b => {
+    const geo = new THREE.SphereGeometry(b.r, 10, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: b.col, transparent: true, opacity: b.o, depthWrite: false });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(b.x, b.y, b.z);
+    scene.add(m);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  FLOATING ISLANDS
+// ─────────────────────────────────────────────
+const ISLAND_DEFS = [
+  { x:  0,   y: -4,  z:  0,   r: 7,  col: 0x3d2060 },
+  { x:-20,   y: -3,  z:-18,   r: 5,  col: 0x4a2070 },
+  { x: 20,   y:  1,  z:-28,   r: 4.5,col: 0x3d1a5a },
+  { x:  0,   y: -2,  z:-40,   r: 7,  col: 0x2d1545 },
+  { x:-32,   y:  4,  z:-52,   r: 6,  col: 0x3a1e60 },
+  { x: 28,   y: -3,  z:-58,   r: 5.5,col: 0x2a1240 },
+  { x:  0,   y:  5,  z:-85,   r: 10, col: 0x1a0830 },
+];
+
+function buildIslands() {
+  ISLAND_DEFS.forEach(d => {
+    // Body
+    const bodyGeo = new THREE.CylinderGeometry(d.r, d.r * 1.4, 3, 12);
+    const bodyMat = new THREE.MeshPhongMaterial({
+      color: d.col,
+      emissive: new THREE.Color(d.col).multiplyScalar(0.25),
+      shininess: 10
+    });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.set(d.x, d.y, d.z);
+    scene.add(body);
+
+    // Grass cap
+    const grassGeo = new THREE.SphereGeometry(d.r, 12, 6, 0, Math.PI*2, 0, Math.PI/2);
+    const grassMat = new THREE.MeshPhongMaterial({
+      color: 0x2a5224,
+      emissive: 0x0a1a08,
+      shininess: 5
+    });
+    const grass = new THREE.Mesh(grassGeo, grassMat);
+    grass.position.set(d.x, d.y + 1.4, d.z);
+    scene.add(grass);
+
+    // Flowers on island
+    const flowerCount = Math.floor(d.r * 2.5);
+    for (let i = 0; i < flowerCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const rad   = Math.random() * d.r * 0.8;
+      spawnFlower(
+        d.x + Math.cos(angle) * rad,
+        d.y + 1.7,
+        d.z + Math.sin(angle) * rad,
+        0.22
+      );
+    }
+
+    // Subtle island glow
+    const pl = new THREE.PointLight(0x8040c0, 0.4, d.r * 3.5);
+    pl.position.set(d.x, d.y + 2, d.z);
+    scene.add(pl);
+  });
+}
+
+function spawnFlower(x, y, z, size = 0.25) {
+  const stemGeo = new THREE.CylinderGeometry(0.04, 0.04, size * 2.5, 5);
+  const stemMat = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
+  const stem = new THREE.Mesh(stemGeo, stemMat);
+  stem.position.set(x, y + size * 1.2, z);
+  scene.add(stem);
+
+  const petalPalette = [0xff80aa, 0xffb3cc, 0xffd700, 0xe8a0ff, 0xff6090, 0xffffff, 0xffaa60];
+  const col = petalPalette[Math.floor(Math.random() * petalPalette.length)];
+  const bloom = new THREE.Mesh(
+    new THREE.SphereGeometry(size, 8, 6),
+    new THREE.MeshPhongMaterial({
+      color: col,
+      emissive: new THREE.Color(col).multiplyScalar(0.35),
+      shininess: 40
+    })
+  );
+  bloom.position.set(x, y + size * 2.8, z);
+  bloom.userData.baseScale = size / 0.25;
+  bloom.userData.isBloom = true;
+  scene.add(bloom);
+  bloomFlowers.push(bloom);
+}
+
+// ─────────────────────────────────────────────
+//  WATERFALL
+// ─────────────────────────────────────────────
+function buildWaterfall() {
+  const N   = 800;
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+
+  for (let i = 0; i < N; i++) {
+    const t = Math.random();
+    pos[i*3]   = -20 + (Math.random() - 0.5) * 0.9;
+    pos[i*3+1] = 12 - t * 14;
+    pos[i*3+2] = -18 + (Math.random() - 0.5) * 0.4;
+    col[i*3]   = 0.7 + Math.random() * 0.3;
+    col[i*3+1] = 0.85 + Math.random() * 0.15;
+    col[i*3+2] = 1.0;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+
+  const mat = new THREE.PointsMaterial({
+    size: 0.14,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.55,
+    sizeAttenuation: true,
+    depthWrite: false
+  });
+
+  const wf = new THREE.Points(geo, mat);
+  wf.userData.isWaterfall = true;
+  scene.add(wf);
+
+  // Mist at base
+  const mistGeo = new THREE.SphereGeometry(2.5, 10, 8);
+  const mistMat = new THREE.MeshBasicMaterial({ color: 0xb0d8ff, transparent: true, opacity: 0.08, depthWrite: false });
+  const mist = new THREE.Mesh(mistGeo, mistMat);
+  mist.position.set(-20, -1, -18);
+  scene.add(mist);
+}
+
+// ─────────────────────────────────────────────
+//  CLOUDS
+// ─────────────────────────────────────────────
+function buildClouds() {
+  for (let i = 0; i < 28; i++) {
+    const g = new THREE.Group();
+    const blobCount = 4 + Math.floor(Math.random() * 4);
+    for (let j = 0; j < blobCount; j++) {
+      const r   = 0.7 + Math.random() * 1.1;
+      const geo = new THREE.SphereGeometry(r, 8, 6);
+      const op  = 0.06 + Math.random() * 0.1;
+      const mat = new THREE.MeshPhongMaterial({
+        color: 0xf8e0f0,
+        transparent: true,
+        opacity: op,
+        depthWrite: false
+      });
+      const blob = new THREE.Mesh(geo, mat);
+      blob.position.set(
+        (Math.random() - 0.5) * 4,
+        (Math.random() - 0.5) * 1.2,
+        (Math.random() - 0.5) * 2.5
+      );
+      g.add(blob);
+    }
+    g.position.set(
+      (Math.random() - 0.5) * 120,
+      8 + Math.random() * 14,
+      (Math.random() - 1.2) * 120
+    );
+    g.userData.driftSpeed = 0.006 + Math.random() * 0.008;
+    g.userData.phase = Math.random() * Math.PI * 2;
+    scene.add(g);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  LANTERNS
+// ─────────────────────────────────────────────
+function buildLanterns() {
+  const palette = [0xff8040, 0xffd060, 0xff60a0, 0xff4060, 0xffaa30, 0xffcc80];
+  for (let i = 0; i < 30; i++) {
+    const col = palette[Math.floor(Math.random() * palette.length)];
+
+    // Lantern body
+    const geo = new THREE.SphereGeometry(0.42, 8, 6);
+    const mat = new THREE.MeshPhongMaterial({
+      color: col,
+      emissive: new THREE.Color(col).multiplyScalar(0.55),
+      transparent: true,
+      opacity: 0.85
+    });
+    const l = new THREE.Mesh(geo, mat);
+
+    l.position.set(
+      (Math.random() - 0.5) * 80,
+      5 + Math.random() * 18,
+      (Math.random() - 1.2) * 90
+    );
+
+    l.userData.baseY    = l.position.y;
+    l.userData.floatSpd = 0.25 + Math.random() * 0.35;
+    l.userData.floatPh  = Math.random() * Math.PI * 2;
+    l.userData.driftPh  = Math.random() * Math.PI * 2;
+
+    // Point light attached
+    const pl = new THREE.PointLight(col, 0.55, 8);
+    pl.position.copy(l.position);
+    scene.add(pl);
+    l.userData.light = pl;
+
+    scene.add(l);
+    lanterns.push(l);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  BUTTERFLIES
+// ─────────────────────────────────────────────
+function buildButterflies() {
+  const wingColors = [0xff80aa, 0xa78bfa, 0xffd700, 0x80d0ff, 0xff60c0, 0x80ffcc, 0xffaa70];
+  for (let i = 0; i < 18; i++) {
+    const g    = new THREE.Group();
+    const col  = wingColors[i % wingColors.length];
+    const mat  = new THREE.MeshPhongMaterial({
+      color: col,
+      emissive: new THREE.Color(col).multiplyScalar(0.28),
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.82
+    });
+
+    // Left wing (elongated to look wing-like)
+    const wGeoL = new THREE.PlaneGeometry(0.55, 0.38);
+    const wL = new THREE.Mesh(wGeoL, mat);
+    wL.position.x = -0.27;
+
+    // Right wing
+    const wGeoR = new THREE.PlaneGeometry(0.55, 0.38);
+    const wR = new THREE.Mesh(wGeoR, mat.clone());
+    wR.position.x = 0.27;
+
+    // Body
+    const bodyMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 0.4, 5),
+      new THREE.MeshPhongMaterial({ color: 0x1a0818 })
+    );
+    bodyMesh.rotation.z = Math.PI / 2;
+
+    g.add(wL); g.add(wR); g.add(bodyMesh);
+    g.userData.wL       = wL;
+    g.userData.wR       = wR;
+    g.userData.flapSpd  = 3 + Math.random() * 2.5;
+    g.userData.floatSpd = 0.45 + Math.random() * 0.55;
+    g.userData.phase    = Math.random() * Math.PI * 2;
+    g.userData.basePos  = new THREE.Vector3(
+      (Math.random() - 0.5) * 35,
+      2 + Math.random() * 8,
+      (Math.random() - 0.5) * 35 - 10
+    );
+    g.userData.following = (i < 4); // first 4 follow cursor
+
+    g.position.copy(g.userData.basePos);
+    scene.add(g);
+    butterflies.push(g);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  FIREFLIES
+// ─────────────────────────────────────────────
+function buildFireflies() {
+  for (let i = 0; i < 80; i++) {
+    const geo = new THREE.SphereGeometry(0.055, 5, 4);
+    const col = [0xccff80, 0xaaff60, 0xeeff90, 0x80ffcc][Math.floor(Math.random() * 4)];
+    const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.9 });
+    const ff  = new THREE.Mesh(geo, mat);
+
+    ff.position.set(
+      (Math.random() - 0.5) * 55,
+      0.5 + Math.random() * 9,
+      (Math.random() - 0.5) * 55 - 10
+    );
+    ff.userData.basePos = ff.position.clone();
+    ff.userData.speed   = 0.4 + Math.random() * 0.8;
+    ff.userData.phase   = Math.random() * Math.PI * 2;
+    ff.userData.blinkPh = Math.random() * Math.PI * 2;
+    scene.add(ff);
+    fireflies.push(ff);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  GLOWING TREE (final chapter)
+// ─────────────────────────────────────────────
+function buildGlowingTree() {
+  const tx = 0, ty = 5, tz = -85;
+
+  // Trunk
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.45, 0.75, 6, 10),
+    new THREE.MeshPhongMaterial({ color: 0x3d1f0a, emissive: 0x1a0a05 })
+  );
+  trunk.position.set(tx, ty - 0.5, tz);
+  scene.add(trunk);
+
+  // Branch clusters
+  const leafCols = [0x2d5a27, 0x3d7a37, 0xff80aa, 0xffd4e8, 0xa0e880, 0xffcc60];
+  for (let i = 0; i < 9; i++) {
+    const angle = (i / 9) * Math.PI * 2;
+    const rad   = 0.5 + Math.random() * 2.5;
+    const lGeo  = new THREE.SphereGeometry(1.2 + Math.random() * 1.6, 10, 8);
+    const col   = leafCols[i % leafCols.length];
+    const lMat  = new THREE.MeshPhongMaterial({
+      color: col,
+      emissive: new THREE.Color(col).multiplyScalar(0.28),
+      transparent: true,
+      opacity: 0.85
+    });
+    const leaf = new THREE.Mesh(lGeo, lMat);
+    leaf.position.set(
+      tx + Math.cos(angle) * rad,
+      ty + 4 + Math.random() * 4,
+      tz + Math.sin(angle) * rad
+    );
+    scene.add(leaf);
+  }
+
+  // Glowing aura
+  glowLight = new THREE.PointLight(0xffd4a0, 2.0, 28);
+  glowLight.position.set(tx, ty + 6, tz);
+  scene.add(glowLight);
+
+  // Extra colour wash
+  const pink = new THREE.PointLight(0xff80c0, 0.8, 20);
+  pink.position.set(tx + 3, ty + 4, tz);
+  scene.add(pink);
+
+  // Reference so we can animate
+  glowTree = trunk;
+}
+
+// ─────────────────────────────────────────────
+//  PROGRESS DOTS
+// ─────────────────────────────────────────────
+function buildProgressDots() {
+  const el = document.getElementById('progress');
+  CHAPTERS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot' + i;
+    el.appendChild(d);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  SHOOTING STARS
+// ─────────────────────────────────────────────
+function scheduleShootingStars() {
+  function launch() {
+    const N   = 24;
+    const pos = new Float32Array(N * 3);
+    const sx  = (Math.random() - 0.5) * 120;
+    const sy  = 25 + Math.random() * 25;
+    const sz  = (Math.random() - 0.5) * 120 - 40;
+    const dx  = (Math.random() - 0.5) * 0.4;
+    const dy  = -(0.15 + Math.random() * 0.15);
+
+    for (let i = 0; i < N; i++) {
+      pos[i*3]   = sx - i * dx * 1.5;
+      pos[i*3+1] = sy - i * Math.abs(dy) * 1.5;
+      pos[i*3+2] = sz;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.25, transparent: true, opacity: 1 });
+    const ss  = new THREE.Points(geo, mat);
+    ss.userData = { life: 1, dx, dy };
+    scene.add(ss);
+    shootingStars.push(ss);
+
+    // Schedule next
+    setTimeout(launch, 2800 + Math.random() * 3500);
+  }
+  setTimeout(launch, 2000);
+}
+
+// ─────────────────────────────────────────────
+//  HEART CONSTELLATION
+// ─────────────────────────────────────────────
+function spawnHeartConstellation() {
+  if (heartStars.length > 0) return;
+  const cx = camera.position.x + (Math.random() - 0.5) * 18;
+  const cy = camera.position.y + 6 + Math.random() * 6;
+  const cz = camera.position.z - 30;
+
+  for (let t = 0; t < Math.PI * 2; t += 0.28) {
+    const hx = 16 * Math.pow(Math.sin(t), 3);
+    const hy = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+
+    const geo = new THREE.SphereGeometry(0.13, 6, 4);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffaacc, transparent: true, opacity: 1 });
+    const s   = new THREE.Mesh(geo, mat);
+    s.position.set(cx + hx * 0.18, cy + hy * 0.18, cz);
+    scene.add(s);
+    heartStars.push(s);
+  }
+
+  // Fade out after 5 s
+  let fadeT = 0;
+  const fadeInterval = setInterval(() => {
+    fadeT += 0.025;
+    heartStars.forEach(s => { s.material.opacity = Math.max(0, 1 - fadeT); });
+    if (fadeT >= 1) {
+      heartStars.forEach(s => scene.remove(s));
+      heartStars = [];
+      clearInterval(fadeInterval);
+    }
+  }, 80);
+}
+
+// ─────────────────────────────────────────────
+//  CURSOR BLOOM BURST
+// ─────────────────────────────────────────────
+function cursorBloom() {
+  const palette = [0xff80aa, 0xffd700, 0xa78bfa, 0xffb3cc, 0x80ffcc, 0xffcc60];
+  for (let i = 0; i < 14; i++) {
+    const col = palette[Math.floor(Math.random() * palette.length)];
+    const geo = new THREE.SphereGeometry(0.09, 5, 4);
+    const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 1 });
+    const p   = new THREE.Mesh(geo, mat);
+    p.position.copy(mouseWorld);
+    p.userData = {
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: 0.06 + Math.random() * 0.14,
+      vz: (Math.random() - 0.5) * 0.18,
+      life: 1
+    };
+    scene.add(p);
+    bloomParticles.push(p);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  CHAPTER TRANSITION
+// ─────────────────────────────────────────────
+function applyChapter(n, instant = false) {
+  currentChapter = Math.max(0, Math.min(CHAPTERS.length - 1, n));
+  const ch = CHAPTERS[currentChapter];
+  const wp = WAYPOINTS[currentChapter];
+
+  // Camera target
+  camTarget.set(wp.px, wp.py, wp.pz);
+  lookTarget.set(wp.lx, wp.ly, wp.lz);
+
+  if (instant) {
+    camera.position.copy(camTarget);
+    camera.lookAt(lookTarget);
+  }
+
+  // Fog & clear colour
+  scene.fog.color.setHex(ch.fogColor);
+  renderer.setClearColor(ch.clearColor, 1);
+
+  // Chapter text
+  const chEl = document.getElementById('chapter');
+  chEl.style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('ch-title').textContent = ch.title;
+    document.getElementById('ch-text').textContent  = ch.text;
+    chEl.style.opacity = '1';
+  }, 900);
+
+  // Progress dots
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.className = 'dot' + (i === currentChapter ? ' active' : '');
+  });
+
+  // Love letter on final chapter
+  if (currentChapter === 5 && !letterShown) {
+    setTimeout(() => {
+      document.getElementById('letter-overlay').classList.add('visible');
+      letterShown = true;
+    }, 3200);
+  }
+
+  // Hide hint after first move
+  if (!hintHidden) {
+    hintHidden = true;
+    setTimeout(() => {
+      const hint = document.getElementById('hint');
+      hint.style.opacity = '0';
+    }, 4000);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  EVENTS
+// ─────────────────────────────────────────────
+function setupEvents() {
+  // Mouse move
+  document.addEventListener('mousemove', e => {
+    const cursor = document.getElementById('cursor');
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+
+    mouseNDC.x = (e.clientX / innerWidth)  *  2 - 1;
+    mouseNDC.y = (e.clientY / innerHeight) * -2 + 1;
+
+    // Project mouse into world (z = cam - offset)
+    mouseWorld.set(
+      mouseNDC.x * 22,
+      mouseNDC.y * 14,
+      camera.position.z - 6
+    );
+  });
+
+  // Click → bloom burst + heart constellation occasionally
+  document.addEventListener('click', e => {
+    if (e.target.id === 'close-btn' || e.target.id === 'prevBtn' || e.target.id === 'nextBtn') return;
+    cursorBloom();
+    if (Math.random() < 0.4) spawnHeartConstellation();
+    if (currentChapter === 5) {
+      document.getElementById('letter-overlay').classList.add('visible');
+    }
+  });
+
+  // Navigation buttons
+  document.getElementById('nextBtn').addEventListener('click', () => applyChapter(currentChapter + 1));
+  document.getElementById('prevBtn').addEventListener('click', () => applyChapter(currentChapter - 1));
+
+  // Close letter
+  document.getElementById('close-btn').addEventListener('click', () => {
+    document.getElementById('letter-overlay').classList.remove('visible');
+  });
+
+  // Scroll
+  document.addEventListener('wheel', e => {
+    applyChapter(currentChapter + (e.deltaY > 0 ? 1 : -1));
+  }, { passive: true });
+
+  // Touch swipe
+  let touchStartY = 0;
+  document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(dy) > 40) applyChapter(currentChapter + (dy > 0 ? 1 : -1));
+  }, { passive: true });
+
+  // Resize
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  ANIMATION LOOP
+// ─────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  globalTime += dt;
+  const T = globalTime;
+
+  // ── Camera smooth fly-through
+  const wp = WAYPOINTS[currentChapter];
+  const breathX = Math.sin(T * 0.25) * 0.6;
+  const breathY = Math.cos(T * 0.18) * 0.4;
+  const mouseInfluX = mouseNDC.x * 1.8;
+  const mouseInfluY = mouseNDC.y * 1.0;
+
+  camera.position.x += (wp.px + breathX + mouseInfluX - camera.position.x) * 0.018;
+  camera.position.y += (wp.py + breathY + mouseInfluY - camera.position.y) * 0.018;
+  camera.position.z += (wp.pz - camera.position.z) * 0.018;
+
+  const lx = wp.lx + Math.sin(T * 0.18) * 0.5;
+  const ly = wp.ly + Math.cos(T * 0.14) * 0.3;
+  camera.lookAt(lx, ly, wp.lz);
+
+  // ── Lanterns
+  lanterns.forEach(l => {
+    l.position.y = l.userData.baseY + Math.sin(T * l.userData.floatSpd + l.userData.floatPh) * 1.4;
+    l.position.x += Math.sin(T * 0.15 + l.userData.driftPh) * 0.006;
+    l.material.opacity = 0.65 + Math.sin(T * 2.2 + l.userData.floatPh) * 0.2;
+    if (l.userData.light) l.userData.light.position.copy(l.position);
+  });
+
+  // ── Butterflies
+  butterflies.forEach((b, i) => {
+    const ph  = b.userData.phase;
+    const sp  = b.userData.floatSpd;
+    const fl  = b.userData.flapSpd;
+
+    if (b.userData.following) {
+      const targetX = mouseWorld.x + (i - 2) * 1.6;
+      const targetY = mouseWorld.y + Math.sin(T * 2.5 + ph) * 0.6;
+      b.position.x += (targetX - b.position.x) * 0.04;
+      b.position.y += (targetY - b.position.y) * 0.04;
+      b.position.z += (mouseWorld.z - b.position.z) * 0.025;
+    } else {
+      b.position.x = b.userData.basePos.x + Math.sin(T * sp + ph) * 5;
+      b.position.y = b.userData.basePos.y + Math.cos(T * sp * 0.7 + ph) * 2 + Math.sin(T * 0.4) * 1.2;
+      b.position.z = b.userData.basePos.z + Math.sin(T * sp * 0.5 + ph + 1) * 2;
+    }
+
+    // Wing flap
+    const flapA = Math.sin(T * fl) * 0.65;
+    b.userData.wL.rotation.y =  flapA;
+    b.userData.wR.rotation.y = -flapA;
+
+    // Face direction of travel
+    b.rotation.y = Math.atan2(
+      Math.cos(T * sp + ph) * sp,
+      0.5
+    );
+  });
+
+  // ── Fireflies
+  fireflies.forEach(ff => {
+    const ph = ff.userData.phase;
+    const sp = ff.userData.speed;
+    ff.position.x = ff.userData.basePos.x + Math.sin(T * sp       + ph) * 3.5;
+    ff.position.y = ff.userData.basePos.y + Math.cos(T * sp * 1.3 + ph) * 1.8;
+    ff.position.z = ff.userData.basePos.z + Math.sin(T * sp * 0.7 + ph + 1.2) * 2;
+    ff.material.opacity = 0.2 + Math.abs(Math.sin(T * 2.2 + ff.userData.blinkPh)) * 0.8;
+  });
+
+  // ── Bloom flowers pulse
+  bloomFlowers.forEach((f, i) => {
+    const s = f.userData.baseScale * (0.85 + Math.sin(T * 0.9 + i * 0.4) * 0.15);
+    f.scale.setScalar(s);
+  });
+
+  // ── Bloom particles (cursor explosion)
+  bloomParticles = bloomParticles.filter(p => {
+    p.position.x += p.userData.vx;
+    p.position.y += p.userData.vy;
+    p.position.z += p.userData.vz;
+    p.userData.vy   -= 0.006;
+    p.userData.life -= 0.022;
+    p.material.opacity = Math.max(0, p.userData.life);
+    p.scale.setScalar(Math.max(0, p.userData.life));
+    if (p.userData.life <= 0) { scene.remove(p); return false; }
+    return true;
+  });
+
+  // ── Shooting stars
+  shootingStars = shootingStars.filter(ss => {
+    ss.userData.life -= dt * 0.55;
+    ss.position.x += ss.userData.dx * 1.2;
+    ss.position.y += ss.userData.dy * 1.2;
+    ss.material.opacity = Math.max(0, ss.userData.life);
+    if (ss.userData.life <= 0) { scene.remove(ss); return false; }
+    return true;
+  });
+
+  // ── Tree glow pulse
+  if (glowLight) {
+    glowLight.intensity = 1.6 + Math.sin(T * 1.8) * 0.5;
+  }
+
+  // ── Waterfall particle cycling
+  scene.children.forEach(c => {
+    if (c.userData.isWaterfall) {
+      const pos = c.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        pos.array[i*3+1] -= dt * (3 + Math.random() * 2);
+        if (pos.array[i*3+1] < -2) pos.array[i*3+1] = 12;
+      }
+      pos.needsUpdate = true;
+    }
+  });
+
+  // ── Gentle heart constellation trigger
+  if (Math.floor(T) % 12 === 0 && Math.random() < 0.008) {
+    spawnHeartConstellation();
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ─────────────────────────────────────────────
+//  START
+// ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
